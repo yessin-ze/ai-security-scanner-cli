@@ -1,84 +1,110 @@
+# AI PyVuln Detector
 
-![](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_tz9xp5km)
+A command-line tool that sends a Python file to the Gemini API and prints a color-coded list of the security vulnerabilities it finds, each with an explanation, impact, and suggested fix.
 
-## Introducing Today's Project!
+> **Status:** early prototype, built in a weekend. It has not been benchmarked yet, so treat its output as a second opinion, not a verdict. See [Known limitations](#known-limitations).
 
-In this project, I am building an AI Security Scanner for Python, a CLI tool to detect security vulnerabilities in Python source code. This tool will give me the chance to learn how to integrate the Google API, how to store and manage API keys securely, and how to engineer effective security prompts that can identify flaws such as SQL injection, weak hashing algorithms, and command injection. I picked this project because it is at the intersection of two relevant fields, artificial intelligence and cybersecurity, and my end goal is to package it into a VS Code extension."
+![Scanner output on the sample file](docs/output-severity.png)
 
-### Key tools and concepts
+## What it detects
 
-The key tools I used include  Gemini API , Environment Management and Python , python Key concepts I learnt include Secure API Credential Management , Security-Focused Prompt Engineering  and Common security vulnerabilities such as SQL injection, hardcoded secrets, and weak cryptography
+Tested so far on a deliberately vulnerable sample (`examples/vun.py`):
 
-### Challenges and wins
+| Type | Found in sample |
+|---|---|
+| SQL injection | Yes |
+| Command injection (`os.system` with user input) | Yes |
+| Weak password hashing (MD5) | Yes |
+| Hardcoded credentials | Yes |
 
-I did this project today to learn how to integrate the Google Gemini API into a Python CLI tool, manage API keys securely, and engineer prompts that detect code vulnerabilities like SQL injection, weak hashing, and command injection. Another skill I want to learn is how to build and package a VS Code extension so I can run this security scanner directly inside my code editor
+Each finding is printed as:
 
-## Generating the Gemini API Key
+```
+SEVERITY: CRITICAL
+TYPE: SQL Injection
+DESCRIPTION: User input is directly concatenated into a SQL query string without sanitization.
+IMPACT: An attacker can bypass authentication, read, modify, or delete database contents.
+FIX: cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
+```
 
-In this step, I'm setting up my google AI-API-key , i need to do this to connect to Gemini
+Severity levels are color-coded in the terminal with `colorama`.
 
-![Generating the Gemini API Key](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_h3ymx6kd)
+## Requirements
 
-## Setting Up the Python Environment
+- Python 3.10+ (developed on 3.14)
+- A Gemini API key ([how to get one](https://ai.google.dev/gemini-api/docs/api-key)); developed and run on the free tier
+- Packages: `google-genai`, `python-dotenv`, `colorama`
 
-In this step, I'm setting up a Virtual Environment This is important for this project because It keeps all your project's packages isolated from other projects, so they don't interfere with each other
+## Setup
 
-![Setting Up the Python Environment](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_rb4kj7mz)
+```bash
+git clone <repo-url>
+cd <repo-folder>
 
-### Installing the required packages
+python -m venv venv
+source venv/bin/activate          # fish shell: source venv/bin/activate.fish
+                                  # Windows:    venv\Scripts\activate
 
-Now that I have my virtual environment set up I need to Install Packages  mainly python-dotenv for securely storing our Gemini API Key, and google-genai for recognizing Gemini calls written in Python.
+pip install -r requirements.txt
+```
 
-![Setting Up the Python Environment](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_pw6dq3ck)
+Create a `.env` file in the project root:
 
-## Connecting to the Gemini API
+```
+GOOGLE_API_KEY=your_key_here
+```
 
-In this step, I'm connecting to  Gemini by writing a security scanner.py and test it  . This is important because we cant proceed without connecting to Gemini
+`.env` is listed in `.gitignore`. Never commit it. If a key ever lands in git history, revoke it and create a new one.
 
-![Connecting to the Gemini API](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_yw8dt2jh)
+## Usage
 
-### Securing the API key with a .env file
+```bash
+python scanner.py path/to/file.py
+```
 
-I got an error! My error was forgetting to put in the api-key in .env file ,Having a .env file is important because  hardcoding API keys directly in your code is dangerous. If someone gets your key, their requests count against YOUR quota, potentially blocking your access or incurring charges.
+Try it on the included sample:
 
-![Connecting to the Gemini API](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_kn3jm8tb)
+```bash
+python scanner.py examples/vun.py
+```
 
-### Verifying the connection
+> `examples/vun.py` contains intentionally vulnerable code (including shell command execution). It is a test input. **Do not run it.**
 
-I verified the connection by running scanner.py Gemini responded with  printing the response the my prompt  which confirmed that the connection is working!
+## How it works
 
-## Engineering the Security Prompt
+1. `scanner.py` loads the API key from `.env` and reads the target file.
+2. The file's contents are inserted into a security-analysis prompt that asks for a fixed report format (severity, type, description, impact, fix).
+3. The prompt is sent to `gemini-3.5-flash-lite`.
+4. The response is printed with severity levels colored by `colorama`.
 
-In this step, I'm writing a security prompt that tells Gemini to analyze code for vulnerabilities  then we will test it This is important because i need Gemini to verify the security of out code
+## Known limitations
 
-![Engineering the Security Prompt](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_rk9mb7ys)
+- **Your code leaves your machine.** The full file is sent to Google's API, including any secrets inside it. Don't scan proprietary code or files containing real credentials.
+- **Output is not deterministic.** Scanning the same file twice produced different report layouts (one run included CWE IDs, the other did not):
 
-## Building the File Scanner
+  | Run 1 | Run 2 |
+  |---|---|
+  | ![Run 1](docs/run-1.png) | ![Run 2](docs/run-2.png) |
 
-In this step, I'm adding file scanning so my scanner can so it can read real Python files from your computer and send their code to Gemini for a full security analysis This is important because we do not have to copy and paste the code in scanner.py every time
+- **Severity is the model's opinion.** It is not CVSS or any calibrated scale. In the sample, hardcoded credentials were rated MEDIUM, which many reviewers would rate higher.
+- **Suggested fixes are not verified.** For example, the SQL injection fix parameterizes the query but still compares a plaintext password. Review every fix before applying it.
+- **Prompt injection is possible.** Text inside the scanned file (such as a comment addressed to the model) can influence the report.
+- **No measured accuracy.** It has only been run on one small sample, so false-positive and false-negative rates are unknown.
+- Python files only, one file per run.
 
-![Building the File Scanner](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_jt7px3na)
+## Roadmap
 
-## Running the Security Audit
+- [ ] Benchmark against [Bandit](https://github.com/PyCQA/bandit) on a set of intentionally vulnerable Python files: what each tool catches and misses
+- [ ] Request structured JSON output instead of free text, so the report format is stable
+- [ ] Redact secrets before sending code to the API
+- [ ] Package as a VS Code extension
 
-In this step, I'm testing my scanner by giving it actual vulnerable code and see what it catches .I'll start with one vulnerability first because we need to check if it really works , then we ramp it up from there !
+## Project layout
 
-![Running the Security Audit](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_ub6ry1wf)
-
-### Analyzing the vulnerability report
-
-My scanner detected 4 vulnerabilities  The most surprising vulnerability was 3. Command Injection in process\_input This shows that AI can help with security by catching vulnerabilities befor shipping
-
-## Adding Color-Coded Severity Ratings
-
-In this project extension, I'm adding color-coded severity ratings  This lets the scanner give us insight on what vulnerabilities we should prioritise  so you always know what to fix first.
-
-![Adding Color-Coded Severity Ratings](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_mj7rc2vy)
-
-### How the color system works
-
-I added colour to my responses by  including  severity ratings and using colorama to add color to terminal output.
-
-## Wrapping Up
-
-This project took me approximately a weekend to build. The most challenging part was ensuring the AI generated consistent, predictable outputs—it required iterative prompt engineering to make sure the model reliably flagged vulnerabilities and followed the same reporting format every time
+```
+scanner.py          # CLI entry point
+examples/vun.py     # intentionally vulnerable test input (do not run)
+docs/               # screenshots used in this README
+requirements.txt
+.env                # your API key (not committed)
+```
