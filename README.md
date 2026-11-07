@@ -80,12 +80,6 @@ python scanner.py examples/vun.py
 ## Known limitations
 
 - **Your code leaves your machine.** The full file is sent to Google's API, including any secrets inside it. Don't scan proprietary code or files containing real credentials.
-- **Output is not deterministic.** Scanning the same file twice produced different report layouts (one run included CWE IDs, the other did not):
-
-  | Run 1 | Run 2 |
-  |---|---|
-  | ![Run 1](docs/run-1.png) | ![Run 2](docs/run-2.png) |
-
 - **Severity is the model's opinion.** It is not CVSS or any calibrated scale. In the sample, hardcoded credentials were rated MEDIUM, which many reviewers would rate higher.
 - **Suggested fixes are not verified.** For example, the SQL injection fix parameterizes the query but still compares a plaintext password. Review every fix before applying it.
 - **Prompt injection is possible.** Text inside the scanned file (such as a comment addressed to the model) can influence the report.
