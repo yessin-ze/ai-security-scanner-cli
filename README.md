@@ -1,4 +1,5 @@
 # AI PyVuln Detector
+<img width="1425" height="660" alt="Screenshot_20261107_161247" src="https://github.com/user-attachments/assets/dbd66177-dc98-4067-8ed0-e36c29669e66" />
 
 A command-line tool that sends a Python file to the Gemini API and prints a color-coded list of the security vulnerabilities it finds, each with an explanation, impact, and suggested fix.
 
