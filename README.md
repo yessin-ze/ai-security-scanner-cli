@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/34524323/README.md)
+
 ![](https://nextwork.ai/mohamed-zegnanie/uploads/7303f8f5-e0c4-5469-8727-b19d56edf6f5_tz9xp5km)
 
 ## Introducing Today's Project!
