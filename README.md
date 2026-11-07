@@ -38,8 +38,8 @@ Severity levels are color-coded in the terminal with `colorama`.
 ## Setup
 
 ```bash
-git clone [<repo-url>](https://github.com/yessin-ze/ai-security-scanner-cli/blob/main/README.md)
-cd [<repo-folder>](https://github.com/yessin-ze/ai-security-scanner-cli/blob/main/README.md)
+git clone (https://github.com/yessin-ze/ai-security-scanner-cli/)
+cd [<repo-folder>]
 
 python -m venv venv
 source venv/bin/activate          # fish shell: source venv/bin/activate.fish
